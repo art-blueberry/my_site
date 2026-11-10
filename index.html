@@ -70,9 +70,12 @@
     color: var(--text-dark);
   }
   .card-actions {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--card-border);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--card-border);
+  display: flex;
+  justify-content: flex-start;
+}
   }
   .hint-btn {
     font-family: Georgia, serif;
@@ -1399,9 +1402,6 @@ const THEMES = {
   ]
 };
 
-// ============================================================
-// ЛОГИКА (менять не нужно)
-// ============================================================
 const SECTION_KEYS = Object.keys(THEMES).sort();
 const THEMES_PER_SECTION = 2;
 
@@ -1491,7 +1491,7 @@ function refresh() {
       card.appendChild(row);
     }
 
-    // --- одна общая подсказка на карточку ---
+    // --- одна кнопка «Подсказка» слева под темами ---
     const hintId = "hint-" + pair.map(p => p[0]).join("-");
 
     const actions = document.createElement("div");
@@ -1502,33 +1502,28 @@ function refresh() {
     btn.textContent = "Подсказка";
     btn.dataset.target = hintId;
     btn.onclick = function() { toggleHint(this); };
+    actions.appendChild(btn);
 
     const hintBox = document.createElement("div");
     hintBox.className = "hint-box";
     hintBox.id = hintId;
 
-    const title = document.createElement("div");
-    title.className = "hint-title";
-    title.textContent = "Произведения для аргументации:";
-    hintBox.appendChild(title);
+    // Под каждым названием темы — свои произведения
+    for (const [num, text, hints] of pair) {
+      const subTitle = document.createElement("div");
+      subTitle.className = "hint-subtitle";
+      subTitle.textContent = num + ". " + text;
+      hintBox.appendChild(subTitle);
 
-    // Объединяем произведения обеих тем без повторов
-    const allHints = [];
-    for (const [, , hints] of pair) {
+      const ul = document.createElement("ul");
       for (const h of hints) {
-        if (!allHints.includes(h)) allHints.push(h);
+        const li = document.createElement("li");
+        li.textContent = h;
+        ul.appendChild(li);
       }
+      hintBox.appendChild(ul);
     }
 
-    const ul = document.createElement("ul");
-    for (const h of allHints) {
-      const li = document.createElement("li");
-      li.textContent = h;
-      ul.appendChild(li);
-    }
-    hintBox.appendChild(ul);
-
-    actions.appendChild(btn);
     actions.appendChild(hintBox);
     card.appendChild(actions);
 
