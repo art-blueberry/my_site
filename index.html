@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Темы итогового сочинения</title>
+
 <style>
   :root {
     --bg: #f5ede3;
@@ -1442,6 +1442,7 @@ const THEMES = {
 };
 
 
+
 // ============================================================
 // ЛОГИКА
 // ============================================================
@@ -1527,6 +1528,8 @@ function refresh() {
 }
 
 function openGlobalHint() {
+  document.body.style.overflow = "hidden"; // Блокируем скролл фона
+
   const modal = document.getElementById("hintModal");
   const content = document.getElementById("modalContent");
   content.innerHTML = ""; // Очищаем
@@ -1570,8 +1573,10 @@ function openGlobalHint() {
 }
 
 function closeGlobalHint(e) {
+  // Закрываем только если кликнули по фону или крестику
   if (!e || e.target.classList.contains("modal-overlay") || e.target.classList.contains("modal-close")) {
     document.getElementById("hintModal").classList.remove("open");
+    document.body.style.overflow = ""; // Возвращаем скролл обратно
   }
 }
 
