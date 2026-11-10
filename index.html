@@ -1396,7 +1396,7 @@ const THEMES = {
 };
 
 // ============================================================
-// ЛОГИКА
+// ЛОГИКА (менять не нужно)
 // ============================================================
 const SECTION_KEYS = Object.keys(THEMES).sort();
 const THEMES_PER_SECTION = 2;
@@ -1438,7 +1438,7 @@ function sameSelection(a, b) {
 }
 
 function toggleHint(btn) {
-  const box = btn.nextElementSibling;
+  const box = document.getElementById(btn.dataset.target);
   if (box.classList.contains("open")) {
     box.classList.remove("open");
     btn.textContent = "Подсказка";
@@ -1464,7 +1464,9 @@ function refresh() {
     const pair = selection.slice(i, i + THEMES_PER_SECTION);
     const card = document.createElement("div");
     card.className = "card";
-    for (const [num, text, hints] of pair) {
+
+    // --- темы ---
+    for (const [num, text] of pair) {
       const row = document.createElement("div");
       row.className = "row";
 
@@ -1479,33 +1481,53 @@ function refresh() {
       themeDiv.className = "theme";
       themeDiv.textContent = text;
 
-      const btn = document.createElement("button");
-      btn.className = "hint-btn";
-      btn.textContent = "Подсказка";
-      btn.onclick = function() { toggleHint(this); };
-
-      const hintBox = document.createElement("div");
-      hintBox.className = "hint-box";
-      const title = document.createElement("div");
-      title.className = "hint-title";
-      title.textContent = "Произведения для аргументации:";
-      hintBox.appendChild(title);
-      const ul = document.createElement("ul");
-      for (const h of hints) {
-        const li = document.createElement("li");
-        li.textContent = h;
-        ul.appendChild(li);
-      }
-      hintBox.appendChild(ul);
-
       block.appendChild(themeDiv);
-      block.appendChild(btn);
-      block.appendChild(hintBox);
-
       row.appendChild(numDiv);
       row.appendChild(block);
       card.appendChild(row);
     }
+
+    // --- одна общая подсказка на карточку ---
+    const hintId = "hint-" + pair.map(p => p[0]).join("-");
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    const btn = document.createElement("button");
+    btn.className = "hint-btn";
+    btn.textContent = "Подсказка";
+    btn.dataset.target = hintId;
+    btn.onclick = function() { toggleHint(this); };
+
+    const hintBox = document.createElement("div");
+    hintBox.className = "hint-box";
+    hintBox.id = hintId;
+
+    const title = document.createElement("div");
+    title.className = "hint-title";
+    title.textContent = "Произведения для аргументации:";
+    hintBox.appendChild(title);
+
+    // Объединяем произведения обеих тем без повторов
+    const allHints = [];
+    for (const [, , hints] of pair) {
+      for (const h of hints) {
+        if (!allHints.includes(h)) allHints.push(h);
+      }
+    }
+
+    const ul = document.createElement("ul");
+    for (const h of allHints) {
+      const li = document.createElement("li");
+      li.textContent = h;
+      ul.appendChild(li);
+    }
+    hintBox.appendChild(ul);
+
+    actions.appendChild(btn);
+    actions.appendChild(hintBox);
+    card.appendChild(actions);
+
     cards.appendChild(card);
   }
 }
