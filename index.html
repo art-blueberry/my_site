@@ -69,56 +69,8 @@
     line-height: 1.45;
     color: var(--text-dark);
   }
-  .card-actions {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--card-border);
-    display: flex;
-    justify-content: flex-start;
-  }
-  .hint-btn {
-    font-family: Georgia, serif;
-    font-size: 15px;
-    font-weight: bold;
-    color: var(--text-title);
-    background: var(--btn-bg);
-    border: none;
-    border-radius: 5px;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .hint-btn:hover { background: var(--btn-active); }
-  .hint-btn:active { background: var(--btn-active); }
-  .hint-box {
-    display: none;
-    margin-top: 12px;
-    padding: 12px 16px;
-    background: var(--hint-bg);
-    border-left: 4px solid var(--hint-border);
-    border-radius: 4px;
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  .hint-box.open { display: block; }
-  .hint-box ul {
-    margin: 6px 0 0;
-    padding-left: 20px;
-  }
-  .hint-box li {
-    margin-bottom: 4px;
-  }
-  .hint-title {
-    font-weight: bold;
-    color: var(--text-title);
-    margin-bottom: 4px;
-  }
-  .hint-subtitle {
-    font-weight: bold;
-    color: var(--text-num);
-    margin-top: 12px;
-    margin-bottom: 2px;
-  }
+  
+  /* Стили нижней панели и кнопок */
   .bottom {
     position: fixed;
     left: 0;
@@ -127,11 +79,13 @@
     background: var(--bg);
     padding: 18px 22px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between; /* Разносим кнопки по краям */
     max-width: 860px;
     margin: 0 auto;
+    z-index: 10;
   }
-  .refresh-btn {
+  
+  .refresh-btn, .global-hint-btn {
     font-family: Georgia, serif;
     font-size: 18px;
     font-weight: bold;
@@ -143,8 +97,68 @@
     cursor: pointer;
     transition: background 0.15s ease;
   }
-  .refresh-btn:hover  { background: var(--btn-active); }
-  .refresh-btn:active { background: var(--btn-active); }
+  .refresh-btn:hover, .global-hint-btn:hover { background: var(--btn-active); }
+  .refresh-btn:active, .global-hint-btn:active { background: var(--btn-active); }
+
+  /* Стили модального окна */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(46, 36, 25, 0.6);
+    z-index: 999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal-window {
+    background: var(--bg);
+    border: 2px solid var(--card-border);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--card-border);
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--text-title);
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--text-num);
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal-close:hover { color: var(--text-dark); }
+
+  .modal-content {
+    padding: 24px;
+    overflow-y: auto;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  .hint-subtitle {
+    font-weight: bold;
+    color: var(--text-num);
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
 </style>
 </head>
 <body>
@@ -155,10 +169,27 @@
 </div>
 
 <div class="bottom">
+  <!-- Кнопка "Произведения" слева -->
+  <button class="global-hint-btn" onclick="openGlobalHint()">Произведения</button>
+  <!-- Кнопка "Обновить" справа -->
   <button class="refresh-btn" onclick="refresh()">Обновить темы</button>
 </div>
 
+<!-- Модальное окно для подсказок -->
+<div class="modal-overlay" id="hintModal" onclick="closeGlobalHint(event)">
+  <div class="modal-window" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span>Произведения для аргументации</span>
+      <button class="modal-close" onclick="closeGlobalHint(event)">&times;</button>
+    </div>
+    <div class="modal-content" id="modalContent">
+      <!-- Сюда скрипт вставит список -->
+    </div>
+  </div>
+</div>
+
 <script>
+
 // ============================================================
 // БАЗА ТЕМ И ПОДСКАЗОК (ПРОИЗВЕДЕНИЯ)
 // ============================================================
@@ -1407,6 +1438,7 @@ const THEMES = {
   ]
 };
 
+
 // ============================================================
 // ЛОГИКА
 // ============================================================
@@ -1448,17 +1480,6 @@ function sameSelection(a, b) {
   return true;
 }
 
-function toggleHint(btn) {
-  const box = document.getElementById(btn.dataset.target);
-  if (box.classList.contains("open")) {
-    box.classList.remove("open");
-    btn.textContent = "Подсказка";
-  } else {
-    box.classList.add("open");
-    btn.textContent = "Скрыть";
-  }
-}
-
 function refresh() {
   let selection = generateSelection();
   let tries = 0;
@@ -1496,32 +1517,32 @@ function refresh() {
       row.appendChild(block);
       card.appendChild(row);
     }
+    
+    // В самих карточках теперь только темы, без кнопок
+    cards.appendChild(card);
+  }
+}
 
-    const hintId = "hint-" + pair.map(p => p[0]).join("-");
+function openGlobalHint() {
+  const modal = document.getElementById("hintModal");
+  const content = document.getElementById("modalContent");
+  content.innerHTML = ""; // Очищаем
 
-    const actions = document.createElement("div");
-    actions.className = "card-actions";
-
-    const btn = document.createElement("button");
-    btn.className = "hint-btn";
-    btn.textContent = "Подсказка";
-    btn.dataset.target = hintId;
-    btn.onclick = function() { toggleHint(this); };
-
-    const hintBox = document.createElement("div");
-    hintBox.className = "hint-box";
-    hintBox.id = hintId;
-
-    const title = document.createElement("div");
-    title.className = "hint-title";
-    title.textContent = "Произведения для аргументации:";
-    hintBox.appendChild(title);
+  // Проходимся по последней выпавшей выборке
+  for (let i = 0; i < lastSelection.length; i += THEMES_PER_SECTION) {
+    const pair = lastSelection.slice(i, i + THEMES_PER_SECTION);
+    
+    // Блок для одной карточки (двух тем)
+    const section = document.createElement("div");
+    section.style.marginBottom = "24px";
+    section.style.paddingBottom = "16px";
+    section.style.borderBottom = "1px dashed var(--card-border)";
 
     for (const [num, text, hints] of pair) {
       const subTitle = document.createElement("div");
       subTitle.className = "hint-subtitle";
       subTitle.textContent = num + ". " + text;
-      hintBox.appendChild(subTitle);
+      section.appendChild(subTitle);
 
       const ul = document.createElement("ul");
       for (const h of hints) {
@@ -1529,14 +1550,25 @@ function refresh() {
         li.textContent = h;
         ul.appendChild(li);
       }
-      hintBox.appendChild(ul);
+      section.appendChild(ul);
     }
+    content.appendChild(section);
+  }
 
-    actions.appendChild(btn);
-    card.appendChild(actions);
-    card.appendChild(hintBox);
+  // Убираем линию у последнего блока
+  const lastChild = content.lastElementChild;
+  if (lastChild) {
+    lastChild.style.borderBottom = "none";
+    lastChild.style.marginBottom = "0";
+    lastChild.style.paddingBottom = "0";
+  }
 
-    cards.appendChild(card);
+  modal.classList.add("open");
+}
+
+function closeGlobalHint(e) {
+  if (!e || e.target.classList.contains("modal-overlay") || e.target.classList.contains("modal-close")) {
+    document.getElementById("hintModal").classList.remove("open");
   }
 }
 
