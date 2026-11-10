@@ -70,12 +70,11 @@
     color: var(--text-dark);
   }
   .card-actions {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--card-border);
-  display: flex;
-  justify-content: flex-start;
-}
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--card-border);
+    display: flex;
+    justify-content: flex-start;
   }
   .hint-btn {
     font-family: Georgia, serif;
@@ -113,6 +112,12 @@
     font-weight: bold;
     color: var(--text-title);
     margin-bottom: 4px;
+  }
+  .hint-subtitle {
+    font-weight: bold;
+    color: var(--text-num);
+    margin-top: 12px;
+    margin-bottom: 2px;
   }
   .bottom {
     position: fixed;
@@ -1402,10 +1407,12 @@ const THEMES = {
   ]
 };
 
+// ============================================================
+// ЛОГИКА
+// ============================================================
 const SECTION_KEYS = Object.keys(THEMES).sort();
 const THEMES_PER_SECTION = 2;
 
-// Каждой теме даём постоянный номер по порядку
 const NUMBERED = {};
 let counter = 1;
 for (const key of SECTION_KEYS) {
@@ -1469,7 +1476,6 @@ function refresh() {
     const card = document.createElement("div");
     card.className = "card";
 
-    // --- темы ---
     for (const [num, text] of pair) {
       const row = document.createElement("div");
       row.className = "row";
@@ -1491,7 +1497,6 @@ function refresh() {
       card.appendChild(row);
     }
 
-    // --- одна кнопка «Подсказка» слева под темами ---
     const hintId = "hint-" + pair.map(p => p[0]).join("-");
 
     const actions = document.createElement("div");
@@ -1502,13 +1507,16 @@ function refresh() {
     btn.textContent = "Подсказка";
     btn.dataset.target = hintId;
     btn.onclick = function() { toggleHint(this); };
-    actions.appendChild(btn);
 
     const hintBox = document.createElement("div");
     hintBox.className = "hint-box";
     hintBox.id = hintId;
 
-    // Под каждым названием темы — свои произведения
+    const title = document.createElement("div");
+    title.className = "hint-title";
+    title.textContent = "Произведения для аргументации:";
+    hintBox.appendChild(title);
+
     for (const [num, text, hints] of pair) {
       const subTitle = document.createElement("div");
       subTitle.className = "hint-subtitle";
@@ -1524,8 +1532,9 @@ function refresh() {
       hintBox.appendChild(ul);
     }
 
-    actions.appendChild(hintBox);
+    actions.appendChild(btn);
     card.appendChild(actions);
+    card.appendChild(hintBox);
 
     cards.appendChild(card);
   }
